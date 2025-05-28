@@ -117,13 +117,21 @@ h3 {
 }
 
 .btn-primary {
-    background-color: var(--primary-color);
-    color: white;
+    background-color: var(--accent-color);
+    color: var(--dark-gray);
+}
+
+.btn-primary:hover:not(:disabled) {
+    background-color: #E0A704;
 }
 
 .btn-secondary {
-    background-color: var(--medium-gray);
-    color: white;
+    background-color: var(--accent-color);
+    color: var(--dark-gray);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background-color: #E0A704;
 }
 
 .btn-accent {
@@ -134,14 +142,14 @@ h3 {
 .btn-success {
     background-color: var(--secondary-color);
     color: white;
-    width: 140px; /* Wider width for rectangular shape */
-    height: 50px; /* Adjusted height for a balanced look */
-    border-radius: var(--border-radius); /* Rectangular with rounded corners */
-    padding: 10px 20px; /* Padding for icon and text */
+    width: 140px;
+    height: 50px;
+    border-radius: var(--border-radius);
+    padding: 10px 20px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px; /* Space between icon and text */
+    gap: 8px;
     font-size: 16px;
 }
 
@@ -238,6 +246,11 @@ h3 {
     left: 50%;
     transform: translate(-50%, -50%);
     object-fit: contain;
+    transition: object-fit 0.3s ease, transform 0.3s ease;
+}
+
+#cameraView.landscape {
+    object-fit: cover;
 }
 
 .media-container.fullscreen #cameraView {
@@ -354,18 +367,18 @@ h3 {
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-/* Estilos do Editor de Texto */
 .text-toolbar {
-    position: absolute;
+    position: fixed;
     bottom: 20px;
-    left: 0;
-    right: 0;
+    left: 50%;
+    transform: translateX(-50%);
     background: white;
     padding: 10px;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0,0,0,0.2);
     z-index: 100;
-    margin: 0 20px;
+    width: calc(100% - 40px);
+    max-width: 600px;
 }
 
 .text-controls {
@@ -373,14 +386,7 @@ h3 {
     gap: 10px;
     align-items: center;
     flex-wrap: wrap;
-}
-
-.text-input {
-    flex: 1;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    min-width: 120px;
+    justify-content: center;
 }
 
 .color-picker {
@@ -388,16 +394,6 @@ h3 {
     height: 30px;
     padding: 0;
     border: none;
-}
-
-.size-slider {
-    width: 80px;
-}
-
-.size-value {
-    width: 40px;
-    text-align: center;
-    font-size: 12px;
 }
 
 .btn-text {
@@ -414,22 +410,31 @@ h3 {
     font-weight: bold;
 }
 
+.btn-text i {
+    font-size: 16px;
+}
+
 .draggable-text {
     position: absolute;
     cursor: move;
     user-select: none;
-    transform: translate(-50%, -50%);
     padding: 5px;
     max-width: 80%;
     word-break: break-word;
     text-align: center;
+    transition: left 0.1s ease-out, top 0.1s ease-out, transform 0.1s ease-out;
+    caret-color: auto;
 }
 
-.text-active {
+.draggable-text.dragging {
+    transition: none;
+}
+
+.draggable-text.text-active {
     outline: 2px dashed var(--primary-color);
+    box-shadow: 0 0 8px rgba(66, 133, 244, 0.5);
 }
 
-/* Estilos do Menu da Câmera */
 .camera-menu {
     position: fixed;
     bottom: 20px;
@@ -450,7 +455,6 @@ h3 {
     align-items: center;
 }
 
-/* Estilos dos Filtros */
 .filters-container {
     width: 100%;
     max-width: 600px;
@@ -480,15 +484,15 @@ h3 {
 }
 
 .filter-btn {
-    flex: 0 0 auto;
+    flex: 0 0 80px;
     width: 80px;
     height: 80px;
-    border-radius: 8px;
+    border-radius: 50%;
     overflow: hidden;
     position: relative;
     border: 2px solid transparent;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
     background-color: #f5f5f5;
     display: flex;
     align-items: center;
@@ -504,16 +508,62 @@ h3 {
     border-color: var(--primary-color);
 }
 
-.filter-btn span {
+.filter-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+}
+
+.filter-icon {
     position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
-    font-size: 12px;
-    padding: 4px;
-    text-align: center;
+    width: 80%;
+    height: 80%;
+    object-fit: contain;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.filter-btn[data-filter="none"] .filter-preview,
+.filter-btn[data-filter="none"] .filter-icon {
+    filter: none;
+}
+
+.filter-btn[data-filter="grayscale(100%)"] .filter-preview,
+.filter-btn[data-filter="grayscale(100%)"] .filter-icon {
+    filter: grayscale(100%);
+}
+
+.filter-btn[data-filter="sepia(100%)"] .filter-preview,
+.filter-btn[data-filter="sepia(100%)"] .filter-icon {
+    filter: sepia(100%);
+}
+
+.filter-btn[data-filter="brightness(150%)"] .filter-preview,
+.filter-btn[data-filter="brightness(150%)"] .filter-icon {
+    filter: brightness(150%);
+}
+
+.filter-btn[data-filter="contrast(150%)"] .filter-preview,
+.filter-btn[data-filter="contrast(150%)"] .filter-icon {
+    filter: contrast(150%);
+}
+
+.filter-btn[data-filter="saturate(200%)"] .filter-preview,
+.filter-btn[data-filter="saturate(200%)"] .filter-icon {
+    filter: saturate(200%);
+}
+
+.filter-btn[data-filter="hue-rotate(90deg)"] .filter-preview,
+.filter-btn[data-filter="hue-rotate(90deg)"] .filter-icon {
+    filter: hue-rotate(90deg);
+}
+
+.filter-btn[data-filter="blur(2px)"] .filter-preview,
+.filter-btn[data-filter="blur(2px)"] .filter-icon {
+    filter: blur(2px);
 }
 
 .filter-controls {
@@ -552,17 +602,6 @@ h3 {
     cursor: pointer;
 }
 
-.btn-text.danger {
-    color: var(--danger-color);
-}
-
-.filter-preview {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-/* Responsividade */
 @media (max-width: 768px) {
     .container {
         padding: 25px;
@@ -589,17 +628,22 @@ h3 {
         gap: 5px;
     }
 
-    .text-input {
-        min-width: 100px;
-    }
-
     .filters-scroll {
         gap: 8px;
     }
 
     .filter-btn {
-        width: 70px;
-        height: 70px;
+        width: 90px;
+        height: 90px;
+    }
+
+    .filter-icon {
+        width: 70%;
+        height: 70%;
+    }
+
+    .draggable-text {
+        max-width: 90%;
     }
 
     #realTimeText {
@@ -616,7 +660,7 @@ h3 {
     }
 
     .btn-success {
-        width: 120px; /* Slightly narrower for smaller screens */
+        width: 120px;
         height: 45px;
         font-size: 14px;
     }
@@ -654,7 +698,7 @@ h3 {
 
     .text-toolbar {
         padding: 8px;
-        margin: 0 10px;
+        width: calc(100% - 20px);
     }
 
     .btn-text {
@@ -662,22 +706,18 @@ h3 {
         font-size: 12px;
     }
 
-    .size-slider {
-        width: 60px;
-    }
-
     .filters-container {
         padding: 12px;
     }
 
     .filter-btn {
-        width: 60px;
-        height: 60px;
+        width: 80px;
+        height: 80px;
     }
 
-    .filter-btn span {
-        font-size: 10px;
-        padding: 2px;
+    .filter-icon {
+        width: 60%;
+        height: 60%;
     }
 
     .camera-menu {
@@ -690,7 +730,7 @@ h3 {
     }
 
     .btn-success {
-        width: 100px; /* Narrower for very small screens */
+        width: 100px;
         height: 40px;
         font-size: 12px;
         gap: 5px;

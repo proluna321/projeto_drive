@@ -1,0 +1,28 @@
+{
+    "name": "PixelHug",
+    "short_name": "PixelHug",
+    "description": "Uma aplicação simples para edição e upload de imagens",
+    "start_url": "/index.html",
+    "display": "standalone",
+    "background_color": "#f8f9fa",
+    "theme_color": "#4285F4",
+    "icons": [
+        {
+            "src": "icons/android-icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/android-icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/apple-touch-icon.png",
+            "sizes": "180x180",
+            "type": "image/png",
+            "purpose": "any"
+        }
+    ],
+    "scope": "/"
+}
