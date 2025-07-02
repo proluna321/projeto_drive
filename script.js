@@ -1,3 +1,5 @@
+alert("Ao utilizar esta aplicação, concorda que a foto enviada será exibida no Vídeo Led.");
+
 document.addEventListener('DOMContentLoaded', function() {
     // Elementos da página
     const toggleCameraBtn = document.getElementById('toggleCamera');
@@ -88,12 +90,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Atualizar posições de texto
     function updateTextCSSPosition(element) {
+        if (imagePreview.style.display !== 'block') return; // Evitar cálculos se a imagem não estiver visível
         const imgRect = imagePreview.getBoundingClientRect();
         const containerRect = mediaContainer.getBoundingClientRect();
         const relX = parseFloat(element.dataset.relX) || 0.5;
         const relY = parseFloat(element.dataset.relY) || 0.5;
-        const left = (imgRect.left - containerRect.left + relX * imgRect.width) / containerRect.width * 100;
-        const top = (imgRect.top - containerRect.top + relY * imgRect.height) / containerRect.height * 100;
+
+        // Calcular a posição base em relação à imagem
+        let left = imgRect.left - containerRect.left + relX * imgRect.width;
+        let top = imgRect.top - containerRect.top + relY * imgRect.height;
+
+        // Converter para porcentagem relativa ao contêiner
+        left = (left / containerRect.width * 100).toFixed(2);
+        top = (top / containerRect.height * 100).toFixed(2);
+
+        // Ajustar para evitar corte nas bordas
+        const textRect = element.getBoundingClientRect();
+        const textWidthPercent = (textRect.width / containerRect.width * 100) / 2;
+        const textHeightPercent = (textRect.height / containerRect.height * 100) / 2;
+
+        // Limitar a posição para que o texto não saia do contêiner
+        left = Math.max(textWidthPercent, Math.min(100 - textWidthPercent, parseFloat(left))).toFixed(2);
+        top = Math.max(textHeightPercent, Math.min(100 - textHeightPercent, parseFloat(top))).toFixed(2);
+
         element.style.left = `${left}%`;
         element.style.top = `${top}%`;
     }
@@ -136,6 +155,20 @@ document.addEventListener('DOMContentLoaded', function() {
         textElement.style.whiteSpace = 'pre-wrap';
         textElement.dataset.relX = 0.5;
         textElement.dataset.relY = 0.5;
+
+        // Limitar texto a 15 caracteres
+        textElement.addEventListener('input', () => {
+            if (textElement.textContent.length > 15) {
+                textElement.textContent = textElement.textContent.slice(0, 15);
+                const range = document.createRange();
+                const sel = window.getSelection();
+                range.selectNodeContents(textElement);
+                range.collapse(false);
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
+            updateTextCSSPosition(textElement); // Atualizar posição ao digitar
+        });
 
         makeTextManipulable(textElement);
 
@@ -235,15 +268,26 @@ document.addEventListener('DOMContentLoaded', function() {
             const touches = e.touches || [e];
             if (isDragging && touches.length === 1) {
                 const event = touches[0];
+                const imgRect = imagePreview.getBoundingClientRect();
+                const containerRect = mediaContainer.getBoundingClientRect();
+                
+                // Calcular a posição relativa com base no movimento
                 const dx = event.clientX - initialMouseX;
                 const dy = event.clientY - initialMouseY;
-                const imgRect = imagePreview.getBoundingClientRect();
+                
+                // Calcular relX e relY em relação à imagem
                 let relX = initialRelX + dx / imgRect.width;
                 let relY = initialRelY + dy / imgRect.height;
+                
+                // Garantir que relX e relY fiquem entre 0 e 1
                 relX = Math.max(0, Math.min(1, relX));
                 relY = Math.max(0, Math.min(1, relY));
-                element.dataset.relX = relX;
-                element.dataset.relY = relY;
+                
+                // Atualizar os dados do elemento
+                element.dataset.relX = relX.toFixed(4);
+                element.dataset.relY = relY.toFixed(4);
+                
+                // Atualizar a posição CSS
                 updateTextCSSPosition(element);
             } else if (isMultiTouch && touches.length === 2) {
                 const currentDistance = getTouchDistance(touches[0], touches[1]);
@@ -278,18 +322,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
     textColor.addEventListener('input', () => {
         if (activeTextElement) activeTextElement.style.color = textColor.value;
+        updateTextCSSPosition(activeTextElement); // Atualizar posição ao mudar cor
     });
 
     changeFont.addEventListener('click', () => {
         currentFontIndex = (currentFontIndex + 1) % fonts.length;
         changeFont.textContent = fonts[currentFontIndex];
-        if (activeTextElement) activeTextElement.style.fontFamily = fonts[currentFontIndex];
+        if (activeTextElement) {
+            activeTextElement.style.fontFamily = fonts[currentFontIndex];
+            updateTextCSSPosition(activeTextElement); // Atualizar posição ao mudar fonte
+        }
     });
 
     changeAlign.addEventListener('click', () => {
         currentAlignIndex = (currentAlignIndex + 1) % alignments.length;
         changeAlign.innerHTML = `<i class="fas ${alignments[currentAlignIndex].icon}"></i>`;
-        if (activeTextElement) activeTextElement.style.textAlign = alignments[currentAlignIndex].name;
+        if (activeTextElement) {
+            activeTextElement.style.textAlign = alignments[currentAlignIndex].name;
+            updateTextCSSPosition(activeTextElement); // Atualizar posição ao mudar alinhamento
+        }
     });
 
     finishText.addEventListener('click', () => {
@@ -365,6 +416,7 @@ document.addEventListener('DOMContentLoaded', function() {
         currentImage = canvas.toDataURL('image/jpeg', 0.9);
         imagePreview.src = currentImage;
         imagePreview.style.display = 'block';
+        imagePreview.style.filter = 'none';
         cameraView.style.display = 'none';
         cameraMenu.style.display = 'none';
         mediaContainer.classList.remove('fullscreen');
@@ -430,6 +482,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 currentImage = event.target.result;
                 imagePreview.src = currentImage;
                 imagePreview.style.display = 'block';
+                imagePreview.style.filter = 'none';
                 cameraView.style.display = 'none';
                 cameraMenu.style.display = 'none';
                 mediaContainer.classList.remove('fullscreen');
@@ -602,38 +655,4 @@ document.addEventListener('DOMContentLoaded', function() {
     // Inicializar
     addTextBtn.disabled = true;
     uploadBtn.disabled = true;
-
-// Código já fornecido, mantido como está
-let deferredPrompt;
-
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    const a2hsBtn = document.createElement('button');
-    a2hsBtn.className = 'btn btn-primary';
-    a2hsBtn.innerHTML = '<i class="fas fa-plus"></i>';
-    a2hsBtn.title = 'Adicionar ao Ecrã Principal';
-    a2hsBtn.style.position = 'fixed';
-    a2hsBtn.style.bottom = '80px';
-    a2hsBtn.style.right = '20px';
-    document.body.appendChild(a2hsBtn);
-
-    a2hsBtn.addEventListener('click', () => {
-        a2hsBtn.remove();
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then(choiceResult => {
-            if (choiceResult.outcome === 'accepted') {
-                console.log('Usuário aceitou o prompt A2HS');
-            } else {
-                console.log('Usuário recusou o prompt A2HS');
-            }
-            deferredPrompt = null;
-        });
-    });
-});
-
-window.addEventListener('appinstalled', () => {
-    console.log('Aplicação instalada.');
-});
-
 });

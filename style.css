@@ -419,11 +419,13 @@ h3 {
     cursor: move;
     user-select: none;
     padding: 5px;
-    max-width: 80%;
+    max-width: 90%;
+    min-width: 50px;
     word-break: break-word;
     text-align: center;
     transition: left 0.1s ease-out, top 0.1s ease-out, transform 0.1s ease-out;
     caret-color: auto;
+    box-sizing: border-box;
 }
 
 .draggable-text.dragging {
@@ -643,7 +645,8 @@ h3 {
     }
 
     .draggable-text {
-        max-width: 90%;
+        max-width: 85%;
+        min-width: 40px;
     }
 
     #realTimeText {
@@ -734,5 +737,10 @@ h3 {
         height: 40px;
         font-size: 12px;
         gap: 5px;
+    }
+
+    .draggable-text {
+        max-width: 80%;
+        min-width: 30px;
     }
 }
